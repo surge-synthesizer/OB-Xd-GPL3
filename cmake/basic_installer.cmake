@@ -65,7 +65,7 @@ find_package(Git)
 
 
 string(TIMESTAMP OBXF_DATE "%Y-%m-%d")
-set(OBXF_ZIP obxf-${OBXF_DATE}-${GIT_COMMIT_HASH}-${CMAKE_SYSTEM_NAME}${ELFIN_EXTRA_ZIP_NAME}.zip)
+set(OBXF_ZIP obxf-${OBXF_DATE}-${GIT_COMMIT_HASH}-${CMAKE_SYSTEM_NAME}${OBXF_EXTRA_ZIP_NAME}.zip)
 set(OBXF_ASSETS_ZIP obxf-${OBXF_DATE}-${GIT_COMMIT_HASH}-assets.zip)
 message(STATUS "Zip File Name is ${OBXF_ZIP}")
 
