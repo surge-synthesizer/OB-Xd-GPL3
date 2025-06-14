@@ -28,9 +28,6 @@
 
 #include "Constants.h"
 
-constexpr float ln2 = 0.69314718056f;
-constexpr float mult = ln2 / 12.f;
-
 inline static float getPitch(float index) { return 440.f * expf(mult * index); };
 
 inline static float linsc(float param, const float min, const float max)

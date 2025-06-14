@@ -30,6 +30,13 @@ const static int MAX_VOICES = 32;
 const static int MAX_BEND_RANGE = 48;
 const static int MAX_PANNINGS = 8;
 
+constexpr float ln2 = 0.69314718056f;
+constexpr float mult = ln2 / 12.f;
+constexpr float twoPi = juce::MathConstants<float>::twoPi;
+constexpr float pi = juce::MathConstants<float>::pi;
+constexpr float halfPi = juce::MathConstants<float>::halfPi;
+constexpr float twoByPi = 2.f / juce::MathConstants<float>::pi;
+
 constexpr int fxbVersionNum = 1;
 
 struct fxProgram

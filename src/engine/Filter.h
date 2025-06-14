@@ -178,9 +178,9 @@ class Filter
         s1 = atan(s1 * rcor24) * rcor24Inv;
 
         float y1 = res;
-        float y2 = tptpc(s2, y1, g);
-        float y3 = tptpc(s3, y2, g);
-        float y4 = tptpc(s4, y3, g);
+        float y2 = tpt_process(s2, y1, g);
+        float y3 = tpt_process(s3, y2, g);
+        float y4 = tpt_process(s4, y3, g);
         float mc;
 
         switch (mmch)

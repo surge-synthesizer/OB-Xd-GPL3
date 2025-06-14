@@ -23,13 +23,16 @@
 #ifndef OBXF_SRC_ENGINE_LFO_H
 #define OBXF_SRC_ENGINE_LFO_H
 
+#include <Constants.h>
+#include <juce_dsp/juce_dsp.h>
 #include "SynthEngine.h"
 
 class Lfo
 {
   private:
     float phase;
-    float sine, square, samplehold;
+    float sine, square, saw, tri, samplehold;
+    float pw;
     float sum;
     juce::Random rnd;
 
@@ -56,7 +59,8 @@ class Lfo
         sum = 0.f;
         Frequency = 1.f;
         phase = 0.f;
-        sine = square = samplehold = 0.f;
+        sine = square = saw = tri = samplehold = 0.f;
+        pw = 0.f;
         rnd = juce::Random();
     }
 
@@ -78,8 +82,7 @@ class Lfo
         {
             phaseInc = (bpm / 60.f) * syncRate;
             phase = phaseInc * quaters;
-            phase = (fmod(phase, 1.f) * juce::MathConstants<float>::pi * 2.f -
-                     juce::MathConstants<float>::pi);
+            phase = fmod(phase, 1.f) * twoPi - pi;
         }
     }
 
@@ -89,12 +92,14 @@ class Lfo
 
         if ((waveForm & 1) != 0)
             result += sine;
+
         if ((waveForm & 2) != 0)
             result += square;
+
         if ((waveForm & 4) != 0)
             result += samplehold;
 
-        return tptlpupw(sum, result, 3000.f, SampleRateInv);
+        return tpt_lp_unwarped(sum, result, 3000.f, SampleRateInv);
     }
 
     void setSampleRate(float sr)
@@ -105,13 +110,16 @@ class Lfo
 
     inline void update()
     {
-        phase += ((phaseInc * juce::MathConstants<float>::pi * 2 * SampleRateInv));
-        square = (phase > 0.f ? 1.f : -1.f);
-        sine = sin(phase);
+        phase += ((phaseInc * twoPi * SampleRateInv));
 
-        if (phase > juce::MathConstants<float>::pi)
+        sine = juce::dsp::FastMathApproximations::sin(phase);
+        tri = (twoByPi * abs(phase + halfPi - (phase > halfPi) * twoPi)) - 1.f;
+        saw = pi - phase;
+        square = (phase > 0.f ? 1.f : -1.f);
+
+        if (phase > pi)
         {
-            phase -= 2.f * juce::MathConstants<float>::pi;
+            phase -= twoPi;
             samplehold = rnd.nextFloat() * 2.f - 1.f;
         }
     }
@@ -121,7 +129,9 @@ class Lfo
         frUnsc = val;
 
         if (!synced)
+        {
             phaseInc = val;
+        }
     }
 
     void setRawParam(float param) // used for synced rate changes

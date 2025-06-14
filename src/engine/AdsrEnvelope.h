@@ -28,30 +28,39 @@
 class AdsrEnvelope
 {
   private:
+    enum State
+    {
+        Attack = 1,
+        Decay = 2,
+        Sustain = 3,
+        Release = 4,
+        Silent = 5
+    };
+
     float Value;
     float attack, decay, sustain, release;
     float ua, ud, us, ur;
     float coef;
-    int state; // 1 - attack 2 - decay 3 - sustain 4 - release 5 - silence
-    float SampleRate;
     float uf;
+    float SampleRate;
+    State state;
 
   public:
     AdsrEnvelope()
     {
-        uf = 1;
         Value = 0.0;
         attack = decay = sustain = release = 0.0001f;
         ua = ud = us = ur = 0.0001f;
         coef = 0.f;
-        state = 5;
+        uf = 1;
         SampleRate = 44000.f;
+        state = State::Attack;
     }
 
     void ResetEnvelopeState()
     {
         Value = 0.0f;
-        state = 5;
+        state = State::Silent;
     }
 
     void setSampleRate(float sr) { SampleRate = sr; }
@@ -69,7 +78,7 @@ class AdsrEnvelope
     {
         ua = atk;
         attack = atk * uf;
-        if (state == 1)
+        if (state == State::Attack)
             coef = (float)((log(0.001) - log(1.3)) / (SampleRate * (atk) / 1000.f));
     }
 
@@ -77,7 +86,7 @@ class AdsrEnvelope
     {
         ud = dec;
         decay = dec * uf;
-        if (state == 2)
+        if (state == State::Decay)
             coef = (float)((log(juce::jmin(sustain + 0.0001, 0.99)) - log(1.0)) /
                            (SampleRate * (dec) / 1000.f));
     }
@@ -86,7 +95,7 @@ class AdsrEnvelope
     {
         us = sust;
         sustain = sust;
-        if (state == 2)
+        if (state == State::Decay)
             coef = (float)((log(juce::jmin(sustain + 0.0001, 0.99)) - log(1.0)) /
                            (SampleRate * (decay) / 1000.f));
     }
@@ -95,36 +104,35 @@ class AdsrEnvelope
     {
         ur = rel;
         release = rel * uf;
-        if (state == 4)
+        if (state == State::Release)
             coef = (float)((log(0.00001) - log(Value + 0.0001)) / (SampleRate * (rel) / 1000.f));
     }
 
     void triggerAttack()
     {
-        state = 1;
-        // Value = Value +0.00001f;
+        state = State::Attack;
         coef = (float)((log(0.001) - log(1.3)) / (SampleRate * (attack) / 1000.f));
     }
 
     void triggerRelease()
     {
-        if (state != 4)
+        if (state != State::Release)
             coef =
                 (float)((log(0.00001) - log(Value + 0.0001)) / (SampleRate * (release) / 1000.f));
-        state = 4;
+        state = State::Release;
     }
 
-    inline bool isActive() { return state != 5; }
+    inline bool isActive() { return state != State::Silent; }
 
     inline float processSample()
     {
         switch (state)
         {
-        case 1:
+        case State::Attack:
             if (Value - 1.f > -0.1f)
             {
                 Value = juce::jmin(Value, 0.99f);
-                state = 2;
+                state = State::Decay;
                 coef = (float)((log(juce::jmin(sustain + 0.0001, 0.99)) - log(1.0)) /
                                (SampleRate * (decay) / 1000.f));
                 goto dec;
@@ -134,30 +142,31 @@ class AdsrEnvelope
                 Value = Value - (1.f - Value) * (coef);
             }
             break;
-        case 2:
+        case State::Decay:
         dec:
             if (Value - sustain < 10e-6f)
             {
-                state = 3;
+                state = State::Sustain;
             }
             else
             {
                 Value = Value + Value * coef;
             }
             break;
-        case 3:
+        case State::Sustain:
             Value = juce::jmin(sustain, 0.9f);
             break;
-        case 4:
+        case State::Release:
             if (Value > 20e-6f)
                 Value = Value + Value * coef + dc;
             else
-                state = 5;
+                state = State::Silent;
             break;
-        case 5:
+        case State::Silent:
             Value = 0.f;
             break;
         }
+
         return Value;
     }
 };

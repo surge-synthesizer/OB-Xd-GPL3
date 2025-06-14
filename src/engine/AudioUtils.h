@@ -28,7 +28,7 @@
 
 constexpr float dc = 1e-18f;
 
-inline static float tptlpupw(float &state, float inp, float cutoff, float srInv)
+inline static float tpt_lp_unwarped(float &state, float inp, float cutoff, float srInv)
 {
     cutoff = (cutoff * srInv) * juce::MathConstants<float>::pi;
     double v = (inp - state) * cutoff / (1.f + cutoff);
@@ -37,16 +37,16 @@ inline static float tptlpupw(float &state, float inp, float cutoff, float srInv)
     return res;
 }
 
-inline static float tptlp(float &state, float inp, float cutoff, float srInv)
+inline static float tpt_lp(float &state, float inp, float cutoff, float srInv)
 {
-    cutoff = tan(cutoff * (srInv) * (juce::MathConstants<float>::pi));
+    cutoff = tan(cutoff * srInv * juce::MathConstants<float>::pi);
     double v = (inp - state) * cutoff / (1.f + cutoff);
     double res = v + state;
     state = res + v;
     return res;
 };
 
-inline static float tptpc(float &state, float inp, float cutoff)
+inline static float tpt_process(float &state, float inp, float cutoff)
 {
     double v = (inp - state) * cutoff / (1.f + cutoff);
     double res = v + state;

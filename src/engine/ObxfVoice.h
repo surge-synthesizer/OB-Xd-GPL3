@@ -172,8 +172,8 @@ class ObxfVoice
 
         // portamento on osc input voltage
         // implements rc circuit
-        float ptNote = tptlpupw(prtst, tunedMidiNote - 93, porta * (1 + PortaSlop * PortaSlopAmt),
-                                sampleRateInv);
+        float ptNote = tpt_lp_unwarped(prtst, tunedMidiNote - 93,
+                                       porta * (1 + PortaSlop * PortaSlopAmt), sampleRateInv);
         float pitchwheelcalc =
             (pitchWheel < 0.f) ? (pitchWheel * pitchWheelDownAmt) : (pitchWheel * pitchWheelUpAmt);
 
@@ -220,11 +220,11 @@ class ObxfVoice
 
         float oscps = osc.ProcessSample() * (1 - levelSlopAmt * levelSlop);
 
-        oscps = oscps - tptlpupw(c1, oscps, 12, sampleRateInv);
+        oscps = oscps - tpt_lp_unwarped(c1, oscps, 12, sampleRateInv);
 
         float x1 = oscps;
 
-        x1 = tptpc(d2, x1, brightCoef);
+        x1 = tpt_process(d2, x1, brightCoef);
         x1 = fourpole ? flt.Apply4Pole(x1, cutoffcalc) : flt.Apply2Pole(x1, cutoffcalc);
 
         x1 *= envVal;
